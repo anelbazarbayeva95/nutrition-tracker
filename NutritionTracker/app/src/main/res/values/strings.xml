@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">NutritionTracker</string>
+    <string name="scan_barcode">Scan Barcode</string>
+    <string name="upc_placeholder">UPC Placeholder</string>
+</resources>
