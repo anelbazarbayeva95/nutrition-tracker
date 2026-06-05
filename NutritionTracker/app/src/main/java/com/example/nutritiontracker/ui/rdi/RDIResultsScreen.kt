@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.nutritiontracker.data.RDIRequirements
 import com.example.nutritiontracker.ui.components.HeaderSection
-import com.example.nutritiontracker.ui.theme.GrayBackground
 
 @Composable
 fun RDIResultsScreen(
@@ -25,14 +24,9 @@ fun RDIResultsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(GrayBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        HeaderSection(
-            title = "Your RDI",
-            showSettings = false,
-            showBackButton = true,
-            onBackClick = onBack
-        )
+        HeaderSection(title = "Your RDI", showSettings = false, showBackButton = true, onBackClick = onBack)
 
         Column(
             modifier = Modifier
@@ -41,18 +35,13 @@ fun RDIResultsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // User greeting card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                     Text(
                         text = "Hello ${if (userName.isNotEmpty()) userName else "there"}!",
                         style = MaterialTheme.typography.headlineSmall,
@@ -68,7 +57,6 @@ fun RDIResultsScreen(
                 }
             }
 
-            // Energy section
             RDISection(title = "Energy & Macronutrients") {
                 RDIItem(label = "Calories", value = "${rdiRequirements.calories}", unit = "kcal")
                 RDIItem(label = "Protein", value = String.format("%.1f", rdiRequirements.protein), unit = "g")
@@ -76,7 +64,6 @@ fun RDIResultsScreen(
                 RDIItem(label = "Fiber", value = String.format("%.1f", rdiRequirements.fiber), unit = "g")
             }
 
-            // Minerals section
             RDISection(title = "Minerals") {
                 RDIItem(label = "Calcium", value = "${rdiRequirements.calcium}", unit = "mg")
                 RDIItem(label = "Iron", value = String.format("%.1f", rdiRequirements.iron), unit = "mg")
@@ -87,7 +74,6 @@ fun RDIResultsScreen(
                 RDIItem(label = "Zinc", value = String.format("%.1f", rdiRequirements.zinc), unit = "mg")
             }
 
-            // Vitamins section
             RDISection(title = "Vitamins") {
                 RDIItem(label = "Vitamin A", value = "${rdiRequirements.vitaminA}", unit = "mcg RAE")
                 RDIItem(label = "Vitamin C", value = "${rdiRequirements.vitaminC}", unit = "mg")
@@ -102,18 +88,14 @@ fun RDIResultsScreen(
                 RDIItem(label = "Vitamin B12", value = String.format("%.1f", rdiRequirements.vitaminB12), unit = "mcg")
             }
 
-            // Disclaimer
+            // Disclaimer — always light warm background so text is always readable
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4E6)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Text(
                         text = "Note:",
                         style = MaterialTheme.typography.titleSmall,
@@ -135,82 +117,36 @@ fun RDIResultsScreen(
 }
 
 @Composable
-fun RDISection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
+fun RDISection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E293B),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 16.dp))
             content()
         }
     }
 }
 
 @Composable
-fun RDIItem(
-    label: String,
-    value: String,
-    unit: String,
-    isUpperLimit: Boolean = false
-) {
+fun RDIItem(label: String, value: String, unit: String, isUpperLimit: Boolean = false) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF64748B),
-                fontWeight = FontWeight.Medium
-            )
-            if (isUpperLimit) {
-                Text(
-                    text = "(Upper Limit)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFEF5350)
-                )
-            }
+            Text(text = label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontWeight = FontWeight.Medium)
+            if (isUpperLimit) Text(text = "(Upper Limit)", style = MaterialTheme.typography.bodySmall, color = Color(0xFFEF5350))
         }
-        Row(
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF1E293B),
-                fontWeight = FontWeight.Bold
-            )
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(text = value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = unit,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF64748B)
-            )
+            Text(text = unit, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     }
-    HorizontalDivider(
-        modifier = Modifier.padding(vertical = 4.dp),
-        thickness = 1.dp,
-        color = Color(0xFFE2E8F0)
-    )
+    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 1.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 }
