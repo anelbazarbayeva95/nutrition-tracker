@@ -12,6 +12,8 @@
 
 # Package Files #
 *.jar
+# but the Gradle wrapper jar MUST be committed so ./gradlew works on a clean clone
+!NutritionTracker/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear

@@ -106,23 +106,23 @@ fun TodayProgressCard(foodLog: List<NutritionSummary>, rdiRequirements: RDIRequi
     val calciumTarget = (rdiRequirements?.calcium?.toDouble() ?: 1000.0)
     val ironTarget = (rdiRequirements?.iron ?: 18.0)
 
-    // Each nutrient is normalized against its own target first, then averaged.
-    // Summing raw amounts across different units (e.g. Vitamin C in mg + Vitamin D
-    // in µg, or calcium ~1000 mg + iron ~18 mg) is physically meaningless and lets
-    // the largest-magnitude nutrient dominate the bar. Averaging per-nutrient fill
-    // ratios keeps every nutrient's contribution comparable.
-    val macrosProgress = averageProgress(
-        totalProtein to proteinTarget,
-        totalCarbs to carbsTarget,
-        totalFiber to fiberTarget
+    // Each nutrient is tracked against its own target and shown on its own bar.
+    // The card previously summed raw amounts across incompatible units (e.g.
+    // Vitamin C in mg + Vitamin D in µg, or calcium ~1000 mg + iron ~18 mg) into a
+    // single ratio, which was physically meaningless and let the largest-magnitude
+    // nutrient dominate. Per-nutrient bars keep every nutrient legible and correct.
+    val macros = listOf(
+        NutrientProgress("Protein", totalProtein, proteinTarget, "g"),
+        NutrientProgress("Carbohydrates", totalCarbs, carbsTarget, "g"),
+        NutrientProgress("Fiber", totalFiber, fiberTarget, "g")
     )
-    val vitaminsProgress = averageProgress(
-        totalVitaminC to vitaminCTarget,
-        totalVitaminD to vitaminDTarget
+    val vitamins = listOf(
+        NutrientProgress("Vitamin C", totalVitaminC, vitaminCTarget, "mg"),
+        NutrientProgress("Vitamin D", totalVitaminD, vitaminDTarget, "µg")
     )
-    val mineralsProgress = averageProgress(
-        totalCalcium to calciumTarget,
-        totalIron to ironTarget
+    val minerals = listOf(
+        NutrientProgress("Calcium", totalCalcium, calciumTarget, "mg"),
+        NutrientProgress("Iron", totalIron, ironTarget, "mg")
     )
 
     Card(
@@ -145,49 +145,50 @@ fun TodayProgressCard(foodLog: List<NutritionSummary>, rdiRequirements: RDIRequi
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            NutrientProgressRow(
-                label = "Macro-nutrients",
-                valueText = "${(macrosProgress * 100).toInt()}%",
-                remainingText = progressCaption(macrosProgress),
-                progress = macrosProgress,
-                barColor = Color(0xFF4285F4)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            NutrientProgressRow(
-                label = "Vitamins",
-                valueText = "${(vitaminsProgress * 100).toInt()}%",
-                remainingText = progressCaption(vitaminsProgress),
-                progress = vitaminsProgress,
-                barColor = Color(0xFFF9A825)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            NutrientProgressRow(
-                label = "Minerals",
-                valueText = "${(mineralsProgress * 100).toInt()}%",
-                remainingText = progressCaption(mineralsProgress),
-                progress = mineralsProgress,
-                barColor = Color(0xFFE53935)
-            )
+            NutrientGroup("Macro-nutrients", macros, Color(0xFF4285F4))
+            Spacer(modifier = Modifier.height(16.dp))
+            NutrientGroup("Vitamins", vitamins, Color(0xFFF9A825))
+            Spacer(modifier = Modifier.height(16.dp))
+            NutrientGroup("Minerals", minerals, Color(0xFFE53935))
         }
     }
 }
 
-/**
- * Average of each nutrient's fill ratio (amount / target), clamped to 0..1.
- * Nutrients with a non-positive target are ignored so they don't skew the average.
- */
-private fun averageProgress(vararg nutrients: Pair<Double, Double>): Float {
-    val ratios = nutrients
-        .filter { (_, target) -> target > 0.0 }
-        .map { (value, target) -> (value / target).coerceIn(0.0, 1.0) }
-    if (ratios.isEmpty()) return 0f
-    return (ratios.sum() / ratios.size).toFloat()
+/** A single nutrient's logged amount measured against its daily target. */
+private data class NutrientProgress(
+    val label: String,
+    val value: Double,
+    val target: Double,
+    val unit: String
+) {
+    val progress: Float = if (target > 0.0) (value / target).coerceIn(0.0, 1.0).toFloat() else 0f
+    val valueText: String = "${value.toInt()} / ${target.toInt()} $unit"
+    val remainingText: String =
+        if (progress >= 1f) "Goal met"
+        else "${(target - value).coerceAtLeast(0.0).toInt()} $unit to goal"
 }
 
-private fun progressCaption(progress: Float): String =
-    if (progress >= 1f) "Goal met" else "${((1f - progress) * 100).toInt()}% to goal"
+@Composable
+private fun NutrientGroup(title: String, nutrients: List<NutrientProgress>, barColor: Color) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    nutrients.forEachIndexed { index, nutrient ->
+        NutrientProgressRow(
+            label = nutrient.label,
+            valueText = nutrient.valueText,
+            remainingText = nutrient.remainingText,
+            progress = nutrient.progress,
+            barColor = barColor
+        )
+        if (index != nutrients.lastIndex) {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
 
 @Composable
 private fun NutrientProgressRow(
@@ -295,10 +296,20 @@ fun FoodActionsRow(onBarcodeEntered: (String) -> Unit, onManualEntry: (Nutrition
     var calcium by remember { mutableStateOf("") }
     var iron by remember { mutableStateOf("") }
 
-    val dialogContainerColor = Color(0xFF1F1F1F)
-    val dialogFieldColor = Color(0xFF34313A)
-    val dialogContentColor = Color.White
-    val dialogSecondaryTextColor = Color.White.copy(alpha = 0.72f)
+    // Reset every manual-entry field. Using one helper avoids the earlier bug where
+    // some dismiss/confirm handlers forgot to clear `iron`/`totalFat`, leaving stale
+    // values in the dialog the next time it was opened.
+    val resetManualFields = {
+        description = ""; calories = ""; protein = ""; totalCarbs = ""
+        totalFat = ""; fiber = ""; vitaminC = ""; vitaminD = ""; calcium = ""; iron = ""
+    }
+
+    // Derive dialog colors from the active theme so they read correctly in both
+    // light and dark mode instead of being hardcoded to a dark palette.
+    val dialogContainerColor = MaterialTheme.colorScheme.surface
+    val dialogFieldColor = MaterialTheme.colorScheme.surfaceVariant
+    val dialogContentColor = MaterialTheme.colorScheme.onSurface
+    val dialogSecondaryTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
     val manualTextFieldColors = TextFieldDefaults.colors(
         focusedTextColor = dialogContentColor,
         unfocusedTextColor = dialogContentColor,
@@ -309,8 +320,8 @@ fun FoodActionsRow(onBarcodeEntered: (String) -> Unit, onManualEntry: (Nutrition
         unfocusedLabelColor = dialogSecondaryTextColor,
         focusedPlaceholderColor = dialogSecondaryTextColor,
         unfocusedPlaceholderColor = dialogSecondaryTextColor,
-        focusedIndicatorColor = Color.White.copy(alpha = 0.75f),
-        unfocusedIndicatorColor = Color.White.copy(alpha = 0.55f),
+        focusedIndicatorColor = dialogContentColor.copy(alpha = 0.75f),
+        unfocusedIndicatorColor = dialogContentColor.copy(alpha = 0.55f),
         cursorColor = GreenPrimary,
         focusedTrailingIconColor = dialogContentColor,
         unfocusedTrailingIconColor = dialogContentColor
@@ -323,7 +334,7 @@ fun FoodActionsRow(onBarcodeEntered: (String) -> Unit, onManualEntry: (Nutrition
         focusedPlaceholderColor = dialogSecondaryTextColor,
         unfocusedPlaceholderColor = dialogSecondaryTextColor,
         focusedBorderColor = GreenPrimary,
-        unfocusedBorderColor = Color.White.copy(alpha = 0.55f),
+        unfocusedBorderColor = dialogContentColor.copy(alpha = 0.55f),
         focusedContainerColor = dialogContainerColor,
         unfocusedContainerColor = dialogContainerColor,
         cursorColor = GreenPrimary,
@@ -423,8 +434,7 @@ fun FoodActionsRow(onBarcodeEntered: (String) -> Unit, onManualEntry: (Nutrition
         AlertDialog(
             onDismissRequest = {
                 showManualEntryDialog = false
-                description = ""; calories = ""; protein = ""; totalCarbs = ""
-                totalFat = ""; fiber = ""; vitaminC = ""; vitaminD = ""; calcium = ""
+                resetManualFields()
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -441,16 +451,14 @@ fun FoodActionsRow(onBarcodeEntered: (String) -> Unit, onManualEntry: (Nutrition
                         iron = iron.toDoubleOrNull(),
                     )
                     onManualEntry(summary)
-                    description = ""; calories = ""; protein = ""; totalCarbs = ""
-                    fiber = ""; vitaminC = ""; vitaminD = ""; calcium = ""
+                    resetManualFields()
                     showManualEntryDialog = false
                 }) { Text("Submit", color = GreenPrimary) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showManualEntryDialog = false
-                    description = ""; calories = ""; protein = ""; totalCarbs = ""
-                    fiber = ""; vitaminC = ""; vitaminD = ""; calcium = ""
+                    resetManualFields()
                 }) { Text("Cancel", color = dialogSecondaryTextColor) }
             },
             containerColor = dialogContainerColor,
