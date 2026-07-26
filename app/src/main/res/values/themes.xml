@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.NutritionTracker" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.NutritionTracker" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Pre-Android-12 launch window background (adapts via values-night). -->
+        <item name="android:windowBackground">@color/splash_background</item>
+        <!-- Android 12+ system splash screen background. -->
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">@color/splash_background</item>
+    </style>
 
 </resources>
