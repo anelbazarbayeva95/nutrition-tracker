@@ -106,14 +106,24 @@ fun TodayProgressCard(foodLog: List<NutritionSummary>, rdiRequirements: RDIRequi
     val calciumTarget = (rdiRequirements?.calcium?.toDouble() ?: 1000.0)
     val ironTarget = (rdiRequirements?.iron ?: 18.0)
 
-    val macrosValue = totalProtein + totalCarbs + totalFiber
-    val macrosTarget = proteinTarget + carbsTarget + fiberTarget
-
-    val vitaminsValue = totalVitaminC + totalVitaminD
-    val vitaminsTarget = vitaminCTarget + vitaminDTarget
-
-    val mineralsValue = totalCalcium + totalIron
-    val mineralsTarget = calciumTarget + ironTarget
+    // Each nutrient is normalized against its own target first, then averaged.
+    // Summing raw amounts across different units (e.g. Vitamin C in mg + Vitamin D
+    // in µg, or calcium ~1000 mg + iron ~18 mg) is physically meaningless and lets
+    // the largest-magnitude nutrient dominate the bar. Averaging per-nutrient fill
+    // ratios keeps every nutrient's contribution comparable.
+    val macrosProgress = averageProgress(
+        totalProtein to proteinTarget,
+        totalCarbs to carbsTarget,
+        totalFiber to fiberTarget
+    )
+    val vitaminsProgress = averageProgress(
+        totalVitaminC to vitaminCTarget,
+        totalVitaminD to vitaminDTarget
+    )
+    val mineralsProgress = averageProgress(
+        totalCalcium to calciumTarget,
+        totalIron to ironTarget
+    )
 
     Card(
         modifier = Modifier
@@ -137,32 +147,47 @@ fun TodayProgressCard(foodLog: List<NutritionSummary>, rdiRequirements: RDIRequi
 
             NutrientProgressRow(
                 label = "Macro-nutrients",
-                valueText = "${macrosValue.toInt()} / ${macrosTarget.toInt()} g",
-                remainingText = "${(macrosTarget - macrosValue).coerceAtLeast(0.0).toInt()} g remaining",
-                progress = (macrosValue / macrosTarget).toFloat(),
+                valueText = "${(macrosProgress * 100).toInt()}%",
+                remainingText = progressCaption(macrosProgress),
+                progress = macrosProgress,
                 barColor = Color(0xFF4285F4)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             NutrientProgressRow(
                 label = "Vitamins",
-                valueText = "${vitaminsValue.toInt()} / ${vitaminsTarget.toInt()} mg",
-                remainingText = "${(vitaminsTarget - vitaminsValue).coerceAtLeast(0.0).toInt()} mg remaining",
-                progress = (vitaminsValue / vitaminsTarget).toFloat(),
+                valueText = "${(vitaminsProgress * 100).toInt()}%",
+                remainingText = progressCaption(vitaminsProgress),
+                progress = vitaminsProgress,
                 barColor = Color(0xFFF9A825)
             )
             Spacer(modifier = Modifier.height(12.dp))
 
             NutrientProgressRow(
                 label = "Minerals",
-                valueText = "${mineralsValue.toInt()} / ${mineralsTarget.toInt()} mg",
-                remainingText = "${(mineralsTarget - mineralsValue).coerceAtLeast(0.0).toInt()} mg remaining",
-                progress = (mineralsValue / mineralsTarget).toFloat(),
+                valueText = "${(mineralsProgress * 100).toInt()}%",
+                remainingText = progressCaption(mineralsProgress),
+                progress = mineralsProgress,
                 barColor = Color(0xFFE53935)
             )
         }
     }
 }
+
+/**
+ * Average of each nutrient's fill ratio (amount / target), clamped to 0..1.
+ * Nutrients with a non-positive target are ignored so they don't skew the average.
+ */
+private fun averageProgress(vararg nutrients: Pair<Double, Double>): Float {
+    val ratios = nutrients
+        .filter { (_, target) -> target > 0.0 }
+        .map { (value, target) -> (value / target).coerceIn(0.0, 1.0) }
+    if (ratios.isEmpty()) return 0f
+    return (ratios.sum() / ratios.size).toFloat()
+}
+
+private fun progressCaption(progress: Float): String =
+    if (progress >= 1f) "Goal met" else "${((1f - progress) * 100).toInt()}% to goal"
 
 @Composable
 private fun NutrientProgressRow(
