@@ -148,6 +148,12 @@ fun SettingsScreen(
  * the input text fell back to a dark default and was nearly invisible on the dark
  * card background.
  */
+/** Text style for settings inputs, pinned to the theme's onSurface so the typed
+ *  text is always legible in both light and dark mode. */
+@Composable
+private fun settingsFieldTextStyle() =
+    LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface)
+
 @Composable
 private fun settingsFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -174,14 +180,14 @@ fun PersonalInformationSection(
     ExpandableSection(title = "Personal Information", expanded = expanded, onExpandToggle = { expanded = !expanded }) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = name, onValueChange = onNameChange, label = { Text("Name") }, modifier = Modifier.fillMaxWidth(),
-                colors = settingsFieldColors())
+                colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
             OutlinedTextField(value = age, onValueChange = onAgeChange, label = { Text("Age") }, modifier = Modifier.fillMaxWidth(),
-                colors = settingsFieldColors())
+                colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
             ExposedDropdownMenuBox(expanded = genderExpanded, onExpandedChange = { genderExpanded = !genderExpanded }) {
                 OutlinedTextField(value = gender, onValueChange = {}, readOnly = true, label = { Text("Gender") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    colors = settingsFieldColors())
+                    colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
                 ExposedDropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
                     listOf("Male", "Female").forEach { option ->
                         DropdownMenuItem(text = { Text(option) }, onClick = { onGenderChange(option); genderExpanded = false })
@@ -213,16 +219,16 @@ fun PhysicalDetailsSection(
     ExpandableSection(title = "Physical Details", expanded = expanded, onExpandToggle = { expanded = !expanded }) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = height, onValueChange = onHeightChange, label = { Text("Height (cm)") }, modifier = Modifier.fillMaxWidth(),
-                colors = settingsFieldColors())
+                colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
             OutlinedTextField(value = weight, onValueChange = onWeightChange, label = { Text("Weight (kg)") }, modifier = Modifier.fillMaxWidth(),
-                colors = settingsFieldColors())
+                colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
             OutlinedTextField(value = bodyFat, onValueChange = onBodyFatChange, label = { Text("Body Fat (%)") }, modifier = Modifier.fillMaxWidth(),
-                colors = settingsFieldColors())
+                colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
             ExposedDropdownMenuBox(expanded = activityLevelExpanded, onExpandedChange = { activityLevelExpanded = !activityLevelExpanded }) {
                 OutlinedTextField(value = activityLevel, onValueChange = {}, readOnly = true, label = { Text("Activity Level") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = activityLevelExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    colors = settingsFieldColors())
+                    colors = settingsFieldColors(), textStyle = settingsFieldTextStyle())
                 ExposedDropdownMenu(expanded = activityLevelExpanded, onDismissRequest = { activityLevelExpanded = false }) {
                     activityLevels.forEach { option ->
                         DropdownMenuItem(text = { Text(option, style = MaterialTheme.typography.bodyMedium) }, onClick = { onActivityLevelChange(option); activityLevelExpanded = false })
