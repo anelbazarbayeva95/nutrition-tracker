@@ -39,11 +39,11 @@ Full UI/UX prototype designed in Figma — from wireframes to final high-fidelit
 
 | Simple & Easy Calorie Tracking | Fast, Low-Friction Food Logging | Smart Goal Visualization |
 |---|---|---|
-| ![Home](NutritionTracker/assets/screenshots/Home.png) | ![Scan](NutritionTracker/assets/screenshots/Scan_barcode.png) | ![Goals](NutritionTracker/assets/screenshots/Daily_goals.png) |
+| ![Home](assets/screenshots/Home.png) | ![Scan](assets/screenshots/Scan_barcode.png) | ![Goals](assets/screenshots/Daily_goals.png) |
 
 | Long-Term Nutrition Habits | Personalized Macro Goals | User-Specific Nutrition Planning |
 |---|---|---|
-| ![Weekly](NutritionTracker/assets/screenshots/Monthly_goals.png) | ![RDI](NutritionTracker/assets/screenshots/Your_RDI.png) | ![Settings](NutritionTracker/assets/screenshots/Settings.png) |
+| ![Weekly](assets/screenshots/Monthly_goals.png) | ![RDI](assets/screenshots/Your_RDI.png) | ![Settings](assets/screenshots/Settings.png) |
 
 ---
 
@@ -75,7 +75,7 @@ Full UI/UX prototype designed in Figma — from wireframes to final high-fidelit
 ## How to Run
 
 1. Clone the repo
-2. Open the `NutritionTracker` folder in Android Studio
+2. Open the project folder in Android Studio
 3. Add your USDA API key to `local.properties`:
    ```
    USDA_API_KEY=your_key_here
