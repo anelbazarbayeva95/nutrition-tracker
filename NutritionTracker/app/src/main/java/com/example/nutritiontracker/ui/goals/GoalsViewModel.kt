@@ -13,6 +13,8 @@ import com.example.nutritiontracker.data.local.DailyLogEntity
 import com.example.nutritiontracker.data.local.NutritionDatabase
 import com.example.nutritiontracker.utils.RDICalculator
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
+import java.time.LocalDate
 import kotlin.math.roundToInt
 
 /* DATA MODELS FOR GOALS UI */
@@ -71,6 +73,7 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
     // Internal model used for calculations
     private data class DailyLog(
         val dayIndex: Int,
+        val date: String,          // ISO date, e.g. "2026-07-26"
         val caloriesConsumed: Int,
         val caloriesTarget: Int
     )
@@ -114,6 +117,7 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
                     .mapIndexed { index, e ->
                         DailyLog(
                             dayIndex         = index,
+                            date             = e.date,
                             caloriesConsumed = e.caloriesConsumed,
                             // Always use CURRENT RDI target (not older stored target)
                             caloriesTarget   = calorieTarget
@@ -228,16 +232,26 @@ class GoalsViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /**
+     * Build a full Monday–Sunday view of the current week, placing each log under
+     * its actual weekday (derived from the stored date) instead of by list position.
+     * Days without a log show 0% so the bar sits under the correct day.
+     */
     private fun buildWeeklyUi(logs: List<DailyLog>): WeeklyGoalsUi {
-        val last7 = logs.takeLast(7)
-        val startIndex = logs.size - last7.size
         val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        // Monday of the week that contains today.
+        val monday = LocalDate.now().with(DayOfWeek.MONDAY)
+        val logsByDate = logs.associateBy { it.date }
 
-        val days = last7.mapIndexed { index, log ->
+        val days = (0..6).map { offset ->
+            val date = monday.plusDays(offset.toLong())
+            val log = logsByDate[date.toString()]
             val rawPercent =
-                (log.caloriesConsumed.toFloat() / log.caloriesTarget.toFloat()) * 100f
+                if (log != null && log.caloriesTarget > 0)
+                    (log.caloriesConsumed.toFloat() / log.caloriesTarget.toFloat()) * 100f
+                else 0f
             WeeklyDayUi(
-                label = labels.getOrNull(index) ?: "D${startIndex + index + 1}",
+                label = labels[offset],
                 percentOfGoal = rawPercent
             )
         }
