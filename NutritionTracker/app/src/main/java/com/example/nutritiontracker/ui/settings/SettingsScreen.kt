@@ -142,6 +142,26 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Text-field colors for the settings form, derived from the active theme so the
+ * text stays legible in dark mode. Previously only the border colors were set, so
+ * the input text fell back to a dark default and was nearly invisible on the dark
+ * card background.
+ */
+@Composable
+private fun settingsFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+    cursorColor = MaterialTheme.colorScheme.primary,
+    focusedTrailingIconColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+)
+
 @Composable
 fun PersonalInformationSection(
     name: String, onNameChange: (String) -> Unit,
@@ -154,14 +174,14 @@ fun PersonalInformationSection(
     ExpandableSection(title = "Personal Information", expanded = expanded, onExpandToggle = { expanded = !expanded }) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = name, onValueChange = onNameChange, label = { Text("Name") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                colors = settingsFieldColors())
             OutlinedTextField(value = age, onValueChange = onAgeChange, label = { Text("Age") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                colors = settingsFieldColors())
             ExposedDropdownMenuBox(expanded = genderExpanded, onExpandedChange = { genderExpanded = !genderExpanded }) {
                 OutlinedTextField(value = gender, onValueChange = {}, readOnly = true, label = { Text("Gender") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                    colors = settingsFieldColors())
                 ExposedDropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
                     listOf("Male", "Female").forEach { option ->
                         DropdownMenuItem(text = { Text(option) }, onClick = { onGenderChange(option); genderExpanded = false })
@@ -193,16 +213,16 @@ fun PhysicalDetailsSection(
     ExpandableSection(title = "Physical Details", expanded = expanded, onExpandToggle = { expanded = !expanded }) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(value = height, onValueChange = onHeightChange, label = { Text("Height (cm)") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                colors = settingsFieldColors())
             OutlinedTextField(value = weight, onValueChange = onWeightChange, label = { Text("Weight (kg)") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                colors = settingsFieldColors())
             OutlinedTextField(value = bodyFat, onValueChange = onBodyFatChange, label = { Text("Body Fat (%)") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                colors = settingsFieldColors())
             ExposedDropdownMenuBox(expanded = activityLevelExpanded, onExpandedChange = { activityLevelExpanded = !activityLevelExpanded }) {
                 OutlinedTextField(value = activityLevel, onValueChange = {}, readOnly = true, label = { Text("Activity Level") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = activityLevelExpanded) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)))
+                    colors = settingsFieldColors())
                 ExposedDropdownMenu(expanded = activityLevelExpanded, onDismissRequest = { activityLevelExpanded = false }) {
                     activityLevels.forEach { option ->
                         DropdownMenuItem(text = { Text(option, style = MaterialTheme.typography.bodyMedium) }, onClick = { onActivityLevelChange(option); activityLevelExpanded = false })
