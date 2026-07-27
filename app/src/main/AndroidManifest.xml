@@ -4,6 +4,8 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Required for the USDA FoodData Central API (barcode/UPC lookups). -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
 
     <application
