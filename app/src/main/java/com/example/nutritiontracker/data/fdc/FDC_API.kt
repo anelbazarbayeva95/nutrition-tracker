@@ -1,6 +1,7 @@
 package com.example.nutritiontracker.data.fdc
 
 
+import com.example.nutritiontracker.BuildConfig
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -11,7 +12,8 @@ import retrofit2.http.Query
 interface FoodDataApiService {
 
     companion object {
-        const val API_KEY = "CKFbXyrnFTUKuaKSpZBSqYaBFlAHUM0birgVFLkL"
+        // Supplied via local.properties -> BuildConfig, so no key is committed.
+        val API_KEY = BuildConfig.USDA_API_KEY
         const val BASE_URL = "https://api.nal.usda.gov/fdc/v1/"
     }
 
