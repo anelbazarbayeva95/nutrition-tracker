@@ -4,6 +4,14 @@
 
 <br>
 
+## 🎬 Demo
+
+<p align="center">
+  <img src="assets/screenshots/demo.gif" width="280" alt="Nutrition Tracker demo" />
+</p>
+
+<br>
+
 ## My Contributions
 
 This was a 3-person team project. I owned the **full design-to-frontend pipeline**:
