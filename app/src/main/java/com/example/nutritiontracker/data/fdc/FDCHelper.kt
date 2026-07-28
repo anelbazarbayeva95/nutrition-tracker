@@ -29,6 +29,15 @@ class FDCHelper {
         return (amountPer100G / 100.0) * servingSizeGrams
     }
 
+    // FDC branded foods report Vitamin D as either micrograms (nutrient 1114) or
+    // International Units (nutrient 1110). Prefer µg; otherwise fall back to IU and
+    // convert (1 µg = 40 IU) so the value matches the app's µg targets.
+    private fun scaleVitaminD(details: FdcIdDetails): Double? {
+        scaleServingSize(details, FdcNutrientIDs.VITAMIN_D.id)?.let { return it }
+        val iu = scaleServingSize(details, FdcNutrientIDs.VITAMIN_D_IU.id) ?: return null
+        return iu / 40.0
+    }
+
     private fun addNutritionFactsToSummary(details: FdcIdDetails): NutritionSummary {
 
         val scaledCalories = scaleServingSize(details, FdcNutrientIDs.ENERGY.id)
@@ -37,7 +46,7 @@ class FDCHelper {
         val scaledTotalFat = scaleServingSize(details, FdcNutrientIDs.TOTAL_FAT.id)
         val scaledFiber = scaleServingSize(details, FdcNutrientIDs.FIBER.id)
         val scaledVitaminC = scaleServingSize(details, FdcNutrientIDs.VITAMIN_C.id)
-        val scaledVitaminD = scaleServingSize(details, FdcNutrientIDs.VITAMIN_D.id)
+        val scaledVitaminD = scaleVitaminD(details)
         val scaledCalcium = scaleServingSize(details, FdcNutrientIDs.CALCIUM.id)
         val scaledIron = scaleServingSize(details, FdcNutrientIDs.IRON.id)
 

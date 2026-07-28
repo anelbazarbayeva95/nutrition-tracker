@@ -28,8 +28,10 @@ import com.example.nutritiontracker.data.fdc.FDCHelper
 import com.example.nutritiontracker.data.fdc.FdcIdDetails
 import com.example.nutritiontracker.data.fdc.NutritionResults
 import com.example.nutritiontracker.data.fdc.NutritionSummary
+import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import androidx.compose.ui.platform.LocalContext
 import com.example.nutritiontracker.data.local.DailyLogEntity
@@ -113,24 +115,17 @@ fun NutritionApp(cameraController: CameraController) {   // still passed from Ma
         scannedFoodFound = null
         nutritionalFacts = null
 
-        coroutineScope.launch(Dispatchers.IO) {
+        // Run on the Main scope so state writes and the user-facing Toast happen on
+        // the UI thread; the blocking network call is offloaded to IO. Previously the
+        // whole block ran on Dispatchers.IO and errors were stored in `obtainedErrors`
+        // but never shown, so a not-found/failed lookup silently did nothing.
+        coroutineScope.launch {
             try {
-                val results: NutritionResults = fdcHelper.getNutritionFactsFromBarcodeType(barcode)
+                val results: NutritionResults = withContext(Dispatchers.IO) {
+                    fdcHelper.getNutritionFactsFromBarcodeType(barcode)
+                }
 
-                //Logging is for testing to ensure data is populated correctly
-                Log.i("API_SUCCESS", "Food found: ${results.details.description}, FDC ID: ${results.details.fdcId}")
                 Log.i("API_SUCCESS", "Food found: ${results.summary.description}, Calories: ${results.summary.calories}")
-                Log.i(
-                    "API_SUCCESS",
-                    "Calories: ${results.summary.calories}," +
-                            "Protein: ${results.summary.protein}, " +
-                            "Carbs ${results.summary.totalCarbs}, " +
-                            "Fat: ${results.summary.totalFat}, " +
-                            "Fiber: ${results.summary.fiber}, " +
-                            "VitaminC ${results.summary.vitaminC}, " +
-                            "VitaminD: ${results.summary.vitaminD}, " +
-                            "Calcium: ${results.summary.calcium}, "
-                )
 
                 scannedFoodFound = results.details
                 nutritionalFacts = results.summary
@@ -138,13 +133,22 @@ fun NutritionApp(cameraController: CameraController) {   // still passed from Ma
                 // Add to today's food log
                 todaysFoodLog = todaysFoodLog + results.summary
                 upsertToday(todaysFoodLog)
+
+                Toast.makeText(
+                    context,
+                    "Added: ${results.summary.description}",
+                    Toast.LENGTH_SHORT
+                ).show()
             } catch (e: Exception) {
-                obtainedErrors = when (e) {
-                    is NoSuchElementException -> "Food not Found"
+                val message = when (e) {
+                    is NoSuchElementException -> "No food found for that code"
                     is IllegalArgumentException -> "Invalid barcode"
                     else -> "Network error: ${e.message}"
                 }
+                obtainedErrors = message
                 scannedFoodFound = null
+                Log.w("API_ERROR", "Barcode $barcode failed: $message", e)
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
     }
