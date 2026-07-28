@@ -54,7 +54,8 @@ enum class FdcNutrientIDs(val id: Int){
     FIBER(1079),
 
     VITAMIN_C(1162),
-    VITAMIN_D(1114),
+    VITAMIN_D(1114),      // Vitamin D (D2 + D3), micrograms
+    VITAMIN_D_IU(1110),   // Vitamin D (D2 + D3), International Units
     CALCIUM(1087),
 
     IRON(1089);
